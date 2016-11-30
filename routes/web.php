@@ -21,14 +21,13 @@ Route::group(['middleware' => 'guest'], function () {
     Route::get('/search', function(){
         return redirect()->route('home.index');
     });
+    Route::get('/wiki/show/{id}', 'WikiController@show')->name('wiki.show');
 });
 
 
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/wikis/', 'WikiController@index')->name('wiki.index');
 
-    Route::get('/wiki/show/{id}', 'WikiController@show')->name('wiki.show');
-    
     Route::get('/deck/show/{id}', 'DeckController@show')->name('deck.show');
 
     Route::post('/bank/add', 'BankController@store')->name('bank.store');

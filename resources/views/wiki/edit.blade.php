@@ -45,7 +45,7 @@
         </div>
       </div>
     @endif   
-    <h1>
+    <h1 id="wiki-title">
       </a>Edit Wiki - {{ $wiki->title }}
       <form style="display: inline; float:right" action="{{ route('wiki.update', $wiki->id) }}" method="POST">
         {{ csrf_field() }}
