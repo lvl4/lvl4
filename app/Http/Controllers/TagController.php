@@ -70,11 +70,6 @@ class TagController extends Controller
     {
         $tag = Tag::find($id);  
 
-
-        if (Auth::user()->id != $tag->user_id) {
-            abort(403);
-        }
-
         return view('tag.edit', ['tag' => $tag]);
     }
 
