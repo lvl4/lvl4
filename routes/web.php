@@ -22,11 +22,12 @@ Route::group(['middleware' => 'guest'], function () {
         return redirect()->route('home.index');
     });
     Route::get('/wiki/show/{id}', 'WikiController@show')->name('wiki.show');
+    Route::get('/wikis/', 'WikiController@index')->name('wiki.index');
+    
 });
 
 
 Route::group(['middleware' => 'auth'], function () {
-    Route::get('/wikis/', 'WikiController@index')->name('wiki.index');
 
     Route::get('/deck/show/{id}', 'DeckController@show')->name('deck.show');
 
