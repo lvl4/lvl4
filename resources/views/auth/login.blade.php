@@ -11,6 +11,13 @@
         <div class="header">Log In</div>
       </div>
       <div class="content">
+        @if (Session::has('error'))
+          <div class="ui error message">
+            <div class="header">
+              {{ Session::get('error') }}
+            </div>
+          </div>
+        @endif 
         <form class="ui form" method="POST" action="{{ url('/login') }}">
           {{ csrf_field() }}
             @if ($errors->has('username'))
