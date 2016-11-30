@@ -14,7 +14,9 @@
     color: #e40101 !important;    
 }
 
-
+#wiki-edit{
+    overflow: auto;
+}
 
 .ui.labeled.icon.button, .ui.labeled.icon.buttons .button {
     position: relative;
