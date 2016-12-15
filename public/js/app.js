@@ -1,40 +1,26 @@
-$('.ui.dropdown')
-  .dropdown()
-;
-
-$('.message .close')
-  .on('click', function() {
-    $(this)
-      .closest('.message')
-      .transition('fade')
-    ;
-  })
-;
-
-$('.menu .item')
-  .tab()
-;
-
-$('select.dropdown')
-  .dropdown()
-;
-
-$('.ui.accordion')
-  .accordion()
-;
-
-function viewDecksModal()
-{
-  $('.ui.modal.viewDecks')
-    .modal('show')
-  ;  
-}
-
-$('#show-answer').click(function(){
-  $('#card-answer').show();
-  $('#show-answer').hide();
-  $('.ratings').show();
+$('.tabs a').click(function (e) {
+  e.preventDefault();
+  $(this).tab('show');
 });
+
+$(".select2").select2();
+
+CKEDITOR.replace('editor', {
+    height: 400
+});
+CKEDITOR.replace('editor-1', {
+    height: 400
+});
+
+
+// API SHIT
+
+function showAnswerButton()
+{
+    $('#card-answer').show();
+    $('#show-answer').hide();
+    $('.ratings').show();
+}
 
 function rate(deck_id, card_id, quality, user_id)
 {
@@ -149,12 +135,12 @@ function rate(deck_id, card_id, quality, user_id)
           $('#card-question').html(question);
           $('#card-answer').html(answer);
           $('.ratings').html(
-            '<button onclick="rate('+deck_id+', '+card_id+', 0, '+user_id+')" class="ui button primary" data-tooltip="'+ Math.round(calcDays(0, repeated)) +' days" data-position="bottom center">0</button>'+
-            '<button onclick="rate('+deck_id+', '+card_id+', 1, '+user_id+')" class="ui button primary" data-tooltip="'+ Math.round(calcDays(1, repeated)) +' days" data-position="bottom center">1</button>'+
-            '<button onclick="rate('+deck_id+', '+card_id+', 2, '+user_id+')" class="ui button primary" data-tooltip="'+ Math.round(calcDays(2, repeated)) +' days" data-position="bottom center">2</button>'+
-            '<button onclick="rate('+deck_id+', '+card_id+', 3, '+user_id+')" class="ui button primary" data-tooltip="'+ Math.round(calcDays(3, repeated)) +' days" data-position="bottom center">3</button>'+
-            '<button onclick="rate('+deck_id+', '+card_id+', 4, '+user_id+')" class="ui button primary" data-tooltip="'+ Math.round(calcDays(4, repeated)) +' days" data-position="bottom center">4</button>'+
-            '<button onclick="rate('+deck_id+', '+card_id+', 5, '+user_id+')" class="ui button primary" data-tooltip="'+ Math.round(calcDays(5, repeated)) +' days" data-position="bottom center">5</button>'
+            '<button onclick="rate('+deck_id+', '+card_id+', 0, '+user_id+')" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="'+ Math.round(calcDays(0, repeated)) +' days">0</button>'+
+            '<button onclick="rate('+deck_id+', '+card_id+', 1, '+user_id+')" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="'+ Math.round(calcDays(1, repeated)) +' days">1</button>'+
+            '<button onclick="rate('+deck_id+', '+card_id+', 2, '+user_id+')" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="'+ Math.round(calcDays(2, repeated)) +' days">2</button>'+
+            '<button onclick="rate('+deck_id+', '+card_id+', 3, '+user_id+')" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="'+ Math.round(calcDays(3, repeated)) +' days">3</button>'+
+            '<button onclick="rate('+deck_id+', '+card_id+', 4, '+user_id+')" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="'+ Math.round(calcDays(4, repeated)) +' days">4</button>'+
+            '<button onclick="rate('+deck_id+', '+card_id+', 5, '+user_id+')" class="btn btn-primary" data-toggle="tooltip" data-placement="top" title="'+ Math.round(calcDays(5, repeated)) +' days">5</button>'
           );
 
           // hide answer ans show button and hide ratings
@@ -168,6 +154,7 @@ function rate(deck_id, card_id, quality, user_id)
           $('#show-answer').hide();
           $('.ratings').hide();
           $('#no-more').show();
+          $('.spacer').remove();
         }
 
 

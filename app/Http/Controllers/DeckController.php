@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Bank;
-use App\Deck;
-use App\Wiki;
-use Auth;
 use Illuminate\Http\Request;
+use App\Deck;
+use App\Card;
+use App\Wiki;
+use App\Portal;
+use Auth;
+use App\Bank;
 
 class DeckController extends Controller
 {
@@ -25,9 +27,11 @@ class DeckController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create($id)
     {
-        //
+        $portal = Portal::find($id);
+
+        return view('deck.create', ['portal' => $portal]);
     }
 
     /**
@@ -38,22 +42,21 @@ class DeckController extends Controller
      */
     public function store(Request $request)
     {
-        $name = $request->name;
-        $wiki_id = $request->wiki_id;
-        $user_id = Auth::user()->id;
+        $portal_id = $request->portal_id;
+        $user_id = $request->user_id;
+
 
         $this->validate($request, [
             'name' => 'required|max:255',
-            'wiki_id' => 'required',
         ]);
 
         $deck = Deck::create([
-            'name' => $name,
             'user_id' => $user_id,
-            'wiki_id' => $wiki_id
+            'portal_id' => $portal_id,
+            'name' => $request->name
         ]);
 
-        return redirect()->back()->with('message', '"'. $name .'" deck created successfully.');
+        return redirect()->route('deck.show', $deck->id)->with('message', "$deck->name created successfully. You can add cards below.");
     }
 
     /**
@@ -65,17 +68,23 @@ class DeckController extends Controller
     public function show($id)
     {
         $deck = Deck::find($id);
-        $cards = $deck->cards;
+        $portal = Portal::find($deck->portal_id);
+        $cards = Card::where('deck_id', $deck->id)->get();
 
-        $inBank = Bank::where('deck_id', $deck->id)->where('user_id', Auth::user()->id)->get();
+        $in_deck = false;
 
-        if (count($inBank) > 0) {
-            $inBank = true;
-        }else{
-            $inBank = false;
+        $bank = Bank::where('user_id', Auth::user()->id)->where('deck_id', $deck->id)->get();
+
+        if (count($bank) > 0) {
+            $in_deck = true;
         }
 
-        return view('deck.show', ['deck' => $deck, 'cards' => $cards, 'inBank' => $inBank]);
+        return view('deck.show', [
+            'deck' => $deck,
+            'cards' => $cards,
+            'portal' => $portal,
+            'in_deck' => $in_deck
+        ]);
     }
 
     /**
@@ -88,13 +97,22 @@ class DeckController extends Controller
     {
         $deck = Deck::find($id);
 
-        if (Auth::user()->id != $deck->user_id) {
+        if (Auth::user()) {
+            if (Auth::user()->id == $deck->user_id) {
+                $portal = Portal::find($deck->portal_id);
+
+                return view('deck.edit', [
+                    'deck' => $deck,
+                    'portal' => $portal
+                ]);
+            }else{
+                abort(403);
+            }
+        }else{
             abort(403);
         }
 
-        $wikis = Wiki::all();
-
-        return view('deck.edit', ['deck' => $deck, 'wikis' => $wikis]);
+        
     }
 
     /**
@@ -106,25 +124,17 @@ class DeckController extends Controller
      */
     public function update(Request $request, $id)
     {
-
-        $name = $request->name;
-        $wiki = $request->wiki;
-        $status = $request->status;
-
         $deck = Deck::find($id);
 
         $this->validate($request, [
             'name' => 'required|max:255',
-            'wiki' => 'required',
-            'status' => 'required'
         ]);
 
-        $deck->name = $name;
-        $deck->wiki_id = $wiki;
-        $deck->status = $status;
+        $deck->name = $request->name;
         $deck->save();
 
-        return redirect()->back()->with('message', 'Deck updated successfuly.');
+        return redirect()->route('deck.show', $deck->id)->with('message', "$deck->name edited successfully.");
+
     }
 
     /**
@@ -136,9 +146,17 @@ class DeckController extends Controller
     public function destroy($id)
     {
         $deck = Deck::find($id);
+        $deck_name = $deck->name;
+        $portal_id = $deck->portal_id;
         $deck->delete();
 
-        return redirect()->route('account.show', Auth::user()->id)->with('message', 'Deck deleted successfuly.');
+        return redirect()->route('portal.show', $portal_id)->with('message', "$deck_name deleted successfully.");
+    }
 
+    public function yours()
+    {
+        $decks = Deck::where('user_id', Auth::user()->id)->get();
+
+        return view('deck.yours', ['decks' => $decks]);
     }
 }

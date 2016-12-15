@@ -13,12 +13,13 @@ class DecksTableSeeder extends Seeder
     public function run()
     {
         $faker = Faker\Factory::create();
-        
-        for ($i=1; $i <= 10 ; $i++) { 
+
+        for ($i=0; $i < 10 ; $i++) { 
             DB::table('decks')->insert([
-                'name' => $faker->sentence,
-                'wiki_id' => $i,
-                'user_id' => $i,
+                'portal_id' => rand(1,20),
+                'name' => $faker->sentence(),
+                'user_id' => 1,
+                'created_at' => date('Y-m-d H:i:s')
             ]);
         }
     }

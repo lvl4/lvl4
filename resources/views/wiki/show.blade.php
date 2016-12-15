@@ -1,53 +1,53 @@
-@extends('layouts.app')
+@extends('layouts.master')
 
 @section('title')
     {{ $wiki->title }}
 @endsection
 
 @section('content')
-  <div class="sixteen wide column">
-    <div class="ui fluid card">
-      <div class="content">
-        <div class="header"><h2>{{ $wiki->title }} <a onclick="viewDecksModal()" class="ui tiny right floated button primary">View decks</a></h2></div>
-      </div>
-      <div class="content">
-        {!! $wiki->body !!}
-      </div>
-    </div>
-  </div>
-
-  {{-- modal --}}
-  <div class="ui modal viewDecks">
-    <i class="close icon"></i>
-    <div class="header">
-      Available decks
-    </div>
-    <div class="image content">
-      <div class="description">
-        <div class="ui relaxed divided list">
-          @if (count($decks) > 0)
-            @foreach ($decks as $deck)
-              <div class="item">
-                <i class="large file text outline  icon"></i>
-                <div class="content">
-                  <a href="{{ route('deck.show', $deck->id) }}" class="header">{{ $deck->name }}</a>
-                  <div class="description">Last updated on {{ date('j M Y', strtotime($deck->updated_at)) }}</div>
-                </div>
-              </div>
+    <div class="container-fluid body">
+        @include('partials.sidebar')
+        <div class="content-header">
+            <h1><i class="fa fa-file-text-o green"></i> {{ $wiki->title }}</h1>
+            <i>{{ date('j M Y', strtotime($wiki->created_at)) }}
+            @if ($wiki->status == 'unpublished')
+                <span style="margin-left: 15px;" class="label label-danger">{{ $wiki->status }}</span>
+            @endif
+            </i>
+            <br>
+            @foreach ($tags as $tag)
+                <span class="label label-dark">{{$tag->name}}</span>
             @endforeach
-          @else
-            <div class="ui icon info message">
-              <i class="info icon"></i>
-              <div class="content">
-                <div class="header">
-                  There are currently no decks for this wiki.
-                </div>
-              </div>
-            </div>
-          @endif
         </div>
-      </div>
+        <div class="col-md-9">
+            <ol class="breadcrumb">
+                @if (Auth::user())
+                    <li><a href="{{ route('dashboard.index') }}">All Portals</a></li>
+                @else
+                    <li><a href="{{ route('portal.showall') }}">All Portals</a></li>
+                @endif
+                <li><a href="{{ route('portal.show', $portal->id) }}">{{ $portal->name }}</a></li>
+                <li class="active">{{ $wiki->title }}</li>
+            </ol>
+            <div class="content">
+                @if (Auth::user())
+                    @if (Auth::user()->id == $wiki->user_id)
+                        <a href="{{ route('wiki.edit', $wiki->id) }}" class="btn btn-warning"><i class="fa fa-pencil" aria-hidden="true"></i> Edit Wiki</a>
+                    @endif
+                @endif
+                <p> </p>
+                @if (Session::has('message'))
+                    <div class="alert alert-success" role="alert">{{ Session::get('message') }}</div>
+                @endif
+                <div class="card text-content">
+                    <h2>
+                        <b>{{ $wiki->title }}</b>
+                    </h2>
+                    <br>
+                    {!! $wiki->body !!}
+                </div>
+                <br>
+            </div>
+        </div> 
     </div>
-  </div>
 @endsection
-

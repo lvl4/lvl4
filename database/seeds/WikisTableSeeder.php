@@ -14,11 +14,13 @@ class WikisTableSeeder extends Seeder
     {
         $faker = Faker\Factory::create();
 
-        for ($i=1; $i <= 10 ; $i++) { 
+        for ($i=0; $i < 20 ; $i++) { 
             DB::table('wikis')->insert([
-                'title' => $faker->sentence,
-                'body' => $faker->sentence,
-                'created_at' => $faker->datetime,
+                'title' => $faker->sentence(),
+                'body' => $faker->sentence(),
+                'user_id' => 1,
+                'portal_id' => rand(1,20),
+                'created_at' => date('Y-m-d H:i:s'),
             ]);
         }
     }

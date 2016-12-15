@@ -1,111 +1,86 @@
-@extends('layouts.app')
+@extends('layouts.master')
 
 @section('title')
-    Edit Wiki {{ $wiki->title }}
-@endsection
-
-@section('styles')
-  <script src="/ckeditor/ckeditor.js"></script>
+    Edit Wiki
 @endsection
 
 @section('content')
-  <div class="sixteen wide column">
-    @if ($errors->has('title'))
-      <div class="ui error message">
-        <div class="header">
-          {{ $errors->first('title') }}
+    <div class="container-fluid body">
+        @include('partials.sidebar')
+        <div class="content-header">
+            <h1><i class="fa fa-file-text-o green"></i> Edit an existing Wiki</h1>
+            <i>{{ $wiki->title }}</i>
+            <br>
+            <i>{{ date('j M Y', strtotime($wiki->created_at)) }}</i>
         </div>
-      </div>
-    @endif
-    @if ($errors->has('status'))
-      <div class="ui error message">
-        <div class="header">
-          {{ $errors->first('status') }}
-        </div>
-      </div>
-    @endif
-    @if ($errors->has('body'))
-      <div class="ui error message">
-        <div class="header">
-          {{ $errors->first('body') }}
-        </div>
-      </div>
-    @endif
-    @if ($errors->has('tags'))
-      <div class="ui error message">
-        <div class="header">
-          {{ $errors->first('tags') }}
-        </div>
-      </div>
-    @endif
-    @if (Session::has('message'))
-      <div class="ui success message">
-        <div class="header">
-          {{ Session::get('message') }}
-        </div>
-      </div>
-    @endif   
-    <h1 id="wiki-title">
-      </a>Edit Wiki - {{ $wiki->title }}
-      <form style="display: inline; float:right" action="{{ route('wiki.update', $wiki->id) }}" method="POST">
-        {{ csrf_field() }}
-        <div class="ui form">
-          <div class="fields">
-            <select name="status" class="ui search dropdown" required>
-              <option value="">Select Status</option>
-              @if ($wiki->status == 'published')
-                <option value="published" selected>Published</option>
-                <option value="unpublished">Unpublished</option>
-              @else
-                <option value="published">Published</option>
-                <option value="unpublished" selected>Unpublished</option>
-              @endif
-            </select>
-              <button type="submit" style="margin-right: 7px; margin-left: 13px;" class="ui right floated button green">Save Changes</button>
-          </div>
-        </div>
-    </h1>
-    <div class="ui fluid segment">
-      <div class="ui form">
-        <div class="inline fields">
-          <div class="eleven wide field">
-            <input name="title" type="text" placeholder="Title" value="{{ $wiki->title }}" required>
-          </div>
-          <div class="six wide field">
-          <input type="hidden" name="tags" id="tags-real">
-          <select id="tags" multiple="" class="ui dropdown">
-            <option value="">Select Tags</option>
-            @foreach ($tags as $tag)
-              @if (in_array($tag->id, $selected))
-                <option selected value="{{ $tag->id }}">{{ $tag->name }}</option>
-              @else
-                <option value="{{ $tag->id }}">{{ $tag->name }}</option>
-              @endif
-            @endforeach
-            </select>
-          </div>
-        </div>
-      </div>
-      <textarea name="body" id="wiki-editor" required>{!! $wiki->body !!}</textarea>
+        <div class="col-md-9">
+            <ol class="breadcrumb">
+                <li><a href="{{ route('dashboard.index') }}">All Portals</a></li>
+                <li><a href="{{ route('portal.show', $portal->id) }}">{{ $portal->name }}</a></li>
+                <li><a href="{{ route('wiki.show', $wiki->id) }}">{{ $wiki->title }}</a></li>
+                <li class="active">Edit Wiki</li>
+            </ol>
+            <div class="content">
+                <form action="{{ route('wiki.update', $wiki->id) }}" method="POST">
+                {{ csrf_field() }}
+                <input type="hidden" name="portal_id" value="{{ $portal->id }}">
+                <input type="hidden" name="user_id" value="{{ Auth::user()->id }}">
+                <button type="submit" class="btn btn-success"><i class="fa fa-check" aria-hidden="true"></i> Save Changes</button>
+                <a href="{{ action('WikiController@destroy', $wiki->id) }}" type="button" class="btn btn-danger"><i class="fa fa-times" aria-hidden="true"></i> Delete Wiki</a>
+                <p> </p>
+                <div class="card">
+                    @if ($errors->has('title'))
+                        <div class="alert alert-danger" role="alert"><b>Whoops! </b> {{ $errors->first('title') }}</div>
+                    @endif
+                    @if ($errors->has('tags'))
+                        <div class="alert alert-danger" role="alert"><b>Whoops! </b> {{ $errors->first('tags') }}</div>
+                    @endif
+                    @if ($errors->has('status'))
+                        <div class="alert alert-danger" role="alert"><b>Whoops! </b> {{ $errors->first('status') }}</div>
+                    @endif
+                    @if ($errors->has('body'))
+                        <div class="alert alert-danger" role="alert"><b>Whoops! </b> {{ $errors->first('body') }}</div>
+                    @endif
+                    <h2><b>Edit {{ $wiki->title }}</b></h2>
+                    <br>
+                    <div class="col-md-6">
+                        <label for=""><span class="red">*</span> Title</label>
+                        <input type="text" name="title" class="form-control" value="{{ $wiki->title }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for=""><span class="red">*</span> Tags</label>
+                        <select name="tags[]" id="" class="select2  form-control" multiple="multiple" required>
+                            @foreach ($tags as $tag)
+                                @if (in_array($tag->id, $selectedTags))
+                                    <option selected value="{{ $tag->id }}">{{ $tag->name }}</option>
+                                @else
+                                    <option value="{{ $tag->id }}">{{ $tag->name }}</option>
+                                @endif
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for=""><span class="red">*</span> Status</label>
+                        <select name="status" id="" class="form-control" required>
+                            @if ($wiki->status == 'published')
+                                <option selected value="published">Published</option>
+                                <option value="unpublished">Unpublished</option>
+                            @else
+                                <option value="published">Published</option>
+                                <option selected value="unpublished">Unpublished</option>
+                            @endif
+                        </select>
+                    </div>
+                    <p> </p>
+                    <p> </p>
+                    <div class="col-md-12">
+                        <label for=""><span class="red">*</span> Body</label>
+                        <textarea name="body" id="editor" class="editor" required>{!! $wiki->body !!}</textarea>
+                    </div>
+                    </form>
+                </div>
+                <br>
+            </div>
+        </div> 
     </div>
-  </form>
-  <form action="{{ route('wiki.destroy', $wiki->id) }}" method="POST">
-    {{ csrf_field() }}
-    <button type="submit" class="ui button red">Remove Wiki</button>
-  </form>
-  </div>
-  <br>
-@endsection
-
-@section('scripts')
-  <script>
-    CKEDITOR.replace( 'wiki-editor', {
-      height: '35em'
-    });
-
-    setInterval(function(){ 
-      $('#tags-real').val($('#tags').val());
-      $('.cke_toolbar_break').hide();
-    }, 300);
-  </script>
 @endsection

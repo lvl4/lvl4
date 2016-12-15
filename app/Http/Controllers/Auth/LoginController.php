@@ -4,9 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Lang;
-use Auth;
 
 class LoginController extends Controller
 {
@@ -28,7 +25,7 @@ class LoginController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/wikis';
+    protected $redirectTo = '/';
 
     /**
      * Create a new controller instance.
@@ -38,19 +35,5 @@ class LoginController extends Controller
     public function __construct()
     {
         $this->middleware('guest', ['except' => 'logout']);
-    }
-
-    public function login(Request $request)
-    {   
-        $this->validate($request, [
-            'username' => 'required',
-            'password' => 'required',
-        ]);
-
-        if (Auth::attempt(['username' => $request->username, 'password' => $request->password])) {
-            return redirect()->intended('/');
-        }else{
-            return redirect()->back()->with('error', 'Wrong username and or password combination');
-        }
     }
 }

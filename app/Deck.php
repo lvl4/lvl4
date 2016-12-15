@@ -6,10 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class Deck extends Model
 {
-    protected $fillable = ['name', 'user_id', 'wiki_id'];
-
-    public function cards()
-    {
-        return $this->hasMany('App\Card');
-    }
+    protected $fillable = ['user_id', 'portal_id', 'name'];
 }

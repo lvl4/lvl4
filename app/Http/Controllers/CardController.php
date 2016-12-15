@@ -6,8 +6,10 @@ use App\Bank;
 use App\Card;
 use App\Deck;
 use App\UserCard;
-use Auth;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use Auth;
+use Illuminate\Support\Facades\Storage;
 
 class CardController extends Controller
 {
@@ -21,23 +23,15 @@ class CardController extends Controller
         //
     }
 
-    public function view($id)
-    {   
-        $deck = Deck::find($id);
-        $cards = Card::where('deck_id', $deck->id)->get();
-
-        return view('card.view', ['deck' => $deck, 'cards' => $cards]);
-    }
-
     /**
      * Show the form for creating a new resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
-    {   
-        $decks = Deck::where('user_id', Auth::user()->id)->get();
-        return view('card.create', ['decks' => $decks]);
+    public function create($id)
+    {
+        $deck = Deck::find($id);
+        return view('card.create', ['deck' => $deck]);
     }
 
     /**
@@ -48,25 +42,18 @@ class CardController extends Controller
      */
     public function store(Request $request)
     {
-        $question = $request->question;
         $deck_id = $request->deck_id;
-        $answer = $request->answer;
-        $status = $request->status;
-        $user_id = Auth::user()->id;
 
         $this->validate($request, [
-            'question' => 'required|max:255',
-            'answer' => 'required|max:255',
-            'deck_id' => 'required',
-            'status' => 'required',
+            'question' => 'required',
+            'answer' => 'required',
         ]);
 
         $card = Card::create([
-            'question' => $question,
-            'answer' => $answer,
             'deck_id' => $deck_id,
-            'status' => $status,
-            'user_id' => $user_id
+            'question' => $request->question,
+            'answer' => $request->answer,
+            'user_id' => $request->user_id
         ]);
 
         $banks = Bank::where('deck_id', $deck_id)->get();
@@ -79,7 +66,8 @@ class CardController extends Controller
             $user_card->save();
         }
 
-        return redirect()->back()->with('message', 'Card created succcessfuly.');
+        return redirect()->route('deck.show', $deck_id)->with('message', 'Card added successfully.');
+
     }
 
     /**
@@ -89,9 +77,8 @@ class CardController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function show($id)
-    {   
-        $deck = Deck::find($id);
-        return view('card.show', ['deck' => $deck]);
+    {
+        //
     }
 
     /**
@@ -103,15 +90,12 @@ class CardController extends Controller
     public function edit($id)
     {
         $card = Card::find($id);
+        $deck = Deck::find($card->deck_id);
 
-        if (Auth::user()->id != $card->user_id) {
-            abort(403);
-        }
-
-        $decks = Deck::where('user_id', Auth::user()->id)->get();
-
-        return view('card.edit', ['card' => $card, 'decks' => $decks]);
-
+        return view('card.edit', [
+            'card' => $card,
+            'deck' => $deck
+        ]);
     }
 
     /**
@@ -125,27 +109,17 @@ class CardController extends Controller
     {
         $card = Card::find($id);
 
-        $question = $request->question;
-        $answer = $request->answer;
-        $status = $request->status;
-        $deck_id = $request->deck_id;
-
         $this->validate($request, [
             'question' => 'required',
             'answer' => 'required',
-            'status' => 'required',
-            'deck_id' => 'required',
         ]);
 
-        $card->question = $question;
-        $card->answer = $answer;
-        $card->status = $status;
-        $card->deck_id = $deck_id;
+        $card->question = $request->question;
+        $card->answer = $request->question;
+        $card->user_id = $request->user_id;
         $card->save();
 
-        return redirect()->back()->with('message', 'Card updated successfuly.');
-
-
+        return redirect()->route('deck.show', $request->deck_id)->with('message', 'Card edited successfully.');
     }
 
     /**
@@ -157,17 +131,55 @@ class CardController extends Controller
     public function destroy($id)
     {
         $card = Card::find($id);
-        $deck_id = $card->deck_id;
-
-        $users_cards = UserCard::where('card_id', $card->id)->get();
-
-        foreach ($users_cards as $user_card) {
-            $user_card->delete();
-        }
+            
+        $deck_id  = $card->deck_id;
 
         $card->delete();
 
-        return redirect()->route('card.view', $deck_id)->with('message', 'Card deleted successfuly.');
 
+        return redirect()->route('deck.show', $deck_id)->with('message', 'Card deleted successfully.');
+    }
+
+    public function import(Request $request, $id)
+    {   
+        $deck_id = $id;
+        $user_id = Auth::user()->id;
+
+        $this->validate($request, [
+            'file' => 'required',
+        ]);
+
+        $file = $request->file('file');
+        $fileID = date('ymdhis');
+
+
+        if ($file->isValid()) {
+            $path = $file->storeAs('public/excel', $fileID.'.xlsx');
+
+            $results = Excel::load("public/storage/excel/$fileID.xlsx")->get();
+            foreach ($results as $row) {
+                $card = Card::create([
+                    'question' => nl2br($row->question),
+                    'answer' => nl2br($row->answer),
+                    'user_id' => $user_id,
+                    'deck_id' => $deck_id
+                ]);
+
+                $banks = Bank::where('deck_id', $deck_id)->get();
+
+                foreach ($banks as $bank) {
+                    $user_card = new UserCard;
+                    $user_card->user_id = $bank->user_id;
+                    $user_card->card_id = $card->id;
+                    $user_card->deck_id = $deck_id;
+                    $user_card->save();
+                }
+            }
+        Storage::delete("public/excel/$fileID.xlsx");
+
+            return redirect()->back()->with('message', 'Excel import completed successfully.');
+        }else{
+            return redirect()->back()->with('error', 'There was an error uploading the document.');
+        }
     }
 }

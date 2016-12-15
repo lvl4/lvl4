@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Tag;
-use App\WikiTag;
-use Auth;
 use Illuminate\Http\Request;
+use App\Tag;
+use Auth;
 
 class TagController extends Controller
 {
@@ -16,7 +15,9 @@ class TagController extends Controller
      */
     public function index()
     {
-        //
+        $tags = Tag::where('user_id', Auth::user()->id)->get();
+
+        return view('tag.index', ['tags' => $tags]);
     }
 
     /**
@@ -26,7 +27,7 @@ class TagController extends Controller
      */
     public function create()
     {
-        //
+        return view('tag.create');
     }
 
     /**
@@ -38,15 +39,15 @@ class TagController extends Controller
     public function store(Request $request)
     {
         $this->validate($request, [
-            'name' => 'required|unique:tags|max:255',
+            'name' => 'required|max:255',
         ]);
 
-        $name = $request->input('name');
-        $tag = Tag::create([
-            'name' => $name    
-        ]);
+        $tag = new Tag;
+        $tag->name = $request->name;
+        $tag->user_id = Auth::user()->id;
+        $tag->save();
 
-        return redirect()->back()->with('message', '"'. $name .'" tag created successfully.');
+        return redirect()->route('tag.index')->with('message', "$tag->name added successfully.");
     }
 
     /**
@@ -68,9 +69,18 @@ class TagController extends Controller
      */
     public function edit($id)
     {
-        $tag = Tag::find($id);  
+        $tag = Tag::find($id);
 
-        return view('tag.edit', ['tag' => $tag]);
+        if (Auth::user()) {
+            if (Auth::user()->id == $tag->user_id) {
+                return view('tag.edit', ['tag' => $tag]);
+            }else{
+                abort(403);
+            }
+        }else{
+            abort(403);
+        }
+
     }
 
     /**
@@ -83,17 +93,15 @@ class TagController extends Controller
     public function update(Request $request, $id)
     {
         $tag = Tag::find($id);
-        $name = $request->name;
 
         $this->validate($request, [
-            'name' => 'required|unique:tags|max:255',
+            'name' => 'required|max:255',
         ]);
 
-        $tag->name = $name;
+        $tag->name = $request->name;
         $tag->save();
 
-        return redirect()->back()->with('message', 'Tag updated successfuly.');
-
+        return redirect()->route('tag.index')->with('message', "$tag->name edited successfully.");
     }
 
     /**
@@ -105,15 +113,9 @@ class TagController extends Controller
     public function destroy($id)
     {
         $tag = Tag::find($id);
-
-        $wikis_tags = WikiTag::where('tag_id', $tag->id)->get();
-
-        foreach ($wikis_tags as $wiki_tag) {
-            $wiki_tag->delete();
-        }
-
+        $tag_name = $tag->name;
         $tag->delete();
 
-        return redirect()->route('account.show', Auth::user()->id)->with('message', 'Tag deleted successfuly.');
+        return redirect()->route('tag.index')->with('message', "$tag_name deleted successfully.");
     }
 }

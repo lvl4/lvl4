@@ -8,5 +8,5 @@ class UserCard extends Model
 {
     protected $table = 'users_cards';
 
-    protected $fillable = ['user_id', 'card_id', 'deck_id'];
+    protected $fillable = ['user_id', 'deck_id', 'card_id'];
 }

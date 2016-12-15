@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Bank;
-use App\Deck;
-use App\UserCard;
-use Auth;
 use Illuminate\Http\Request;
+use Auth;
+use App\Bank;
+use App\UserCard;
+use App\Card;
+use DB;
 
 class BankController extends Controller
 {
@@ -17,7 +18,14 @@ class BankController extends Controller
      */
     public function index()
     {
-        //
+        $banks = DB::table('decks')
+            ->join('banks', 'decks.id', '=', 'banks.deck_id')
+            ->join('users', 'banks.user_id', '=', 'users.id')
+            ->where('users.id', Auth::user()->id)
+            ->select('decks.*', 'banks.created_at as bank_created_at')
+            ->get();
+
+        return view('bank.index', ['banks' => $banks]);
     }
 
     /**
@@ -38,25 +46,24 @@ class BankController extends Controller
      */
     public function store(Request $request)
     {
-        $user_id = $request->user_id;
         $deck_id = $request->deck_id;
-        $bank = Bank::create([
-            'user_id' => $user_id,
-            'deck_id' => $deck_id,
-        ]);
 
-        $cards = Deck::find($deck_id)->cards;
-        // dd($cards);
+        $bank = new Bank;
+        $bank->user_id = Auth::user()->id;
+        $bank->deck_id = $deck_id;
+        $bank->save();
+
+        $cards = Card::where('deck_id', $deck_id)->get();
+
         foreach ($cards as $card) {
             UserCard::create([
-                'user_id' => $user_id,
-                'card_id' => $card->id,
-                'deck_id' => $deck_id,
+               'user_id' => Auth::user()->id,
+               'card_id' => $card->id, 
+               'deck_id' => $deck_id
             ]);
         }
 
-        $request->session()->flash('message-success', 'You can now start quizing yourself below!');
-        return redirect()->back();
+        return redirect()->back()->with('message', 'Deck has been added to your Bank.');
     }
 
     /**
@@ -101,13 +108,24 @@ class BankController extends Controller
      */
     public function destroy($id)
     {
-        $bank = Bank::where('deck_id',$id)->where('user_id', Auth::user()->id);
+        $user_id = Auth::user()->id;
+        $deck_id = $id;
 
-        $user_cards = UserCard::where('deck_id', $id)->where('user_id', Auth::user()->id)->get();
-        foreach ($user_cards as $card) {
-            $card->delete();
+        $bank = Bank::where('user_id', $user_id)->where('deck_id', $deck_id)->first();
+
+        if (Auth::user()->id == $bank->user_id) {
+            $bank->delete();
+
+            $user_cards = UserCard::where('deck_id', $deck_id)->where('user_id', $user_id)->get();
+            foreach ($user_cards as $card) {
+                $card->delete();
+            }
+
+            return redirect()->back()->with('message', 'Deck successfully removed from your Bank.');
+        }else{
+            abort(403);
         }
-        $bank->delete();
-        return redirect()->back()->with('message', 'Deck removed from Bank successfuly.');
+
+
     }
 }

@@ -1,6 +1,5 @@
 <?php
 
-use Faker\Factory;
 use Illuminate\Database\Seeder;
 
 class CardsTableSeeder extends Seeder
@@ -14,14 +13,14 @@ class CardsTableSeeder extends Seeder
     {
         $faker = Faker\Factory::create();
 
-        for ($x=1; $x <= 10 ; $x++) { 
-           for ($i=0; $i < 20 ; $i++) { 
-               DB::table('cards')->insert([
-                   'deck_id' => $x,
-                   'question' => $faker->sentence.'?',
-                   'answer' => $faker->sentence,
-               ]);
-           }
+        for ($i=0; $i < 100 ; $i++) { 
+            DB::table('cards')->insert([
+                'deck_id' => rand(1,10),
+                'question' => $faker->sentence(),
+                'answer' => $faker->sentence(),
+                'user_id' => 1,
+                'created_at' => date('Y-m-d H:i:s'),
+            ]);
         }
     }
 }
