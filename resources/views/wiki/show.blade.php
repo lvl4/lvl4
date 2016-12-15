@@ -39,7 +39,7 @@
                 @if (Session::has('message'))
                     <div class="alert alert-success" role="alert">{{ Session::get('message') }}</div>
                 @endif
-                <div class="card text-content">
+                <div style="background: white; padding: 10px; border-radius: 2px;">
                     <h2>
                         <b>{{ $wiki->title }}</b>
                     </h2>
